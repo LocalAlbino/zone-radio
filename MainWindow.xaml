@@ -4,13 +4,44 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZoneRadio"
+        xmlns:chrome="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Background="Black">
-    <Grid x:Name="Zone_Radio">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="361*"/>
-            <ColumnDefinition Width="39*"/>
-        </Grid.ColumnDefinitions>
-
+        Title="Zone Radio" Height="600" Width="800" BorderBrush="#FF1D4ED8" WindowStyle="None" AllowsTransparency="True" Background="Transparent">
+    <chrome:WindowChrome.WindowChrome>
+        <chrome:WindowChrome 
+                CaptionHeight="20"
+                CornerRadius="0"
+                GlassFrameThickness="0"
+                ResizeBorderThickness="5"
+                UseAeroCaptionButtons="False"/>
+    </chrome:WindowChrome.WindowChrome>
+    <Grid Background="#e5e5e5">
+        <Grid Height="20" Background="#2563eb" VerticalAlignment="Top">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
+                <Button x:Name="MinimizeButton" Content="-" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#bfdbfe" Width="20" WindowChrome.IsHitTestVisibleInChrome="True" Click="MinimizeButton_Click" Cursor="Hand"/>
+                <Button x:Name="CloseButton" Content="x" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#bfdbfe" Width="20" Click="CloseButton_Click" WindowChrome.IsHitTestVisibleInChrome="True" Cursor="Hand"/>
+            </StackPanel>
+        </Grid>
+        <Grid Height="60" Background="#2563eb" VerticalAlignment="Top" Margin="0,20,0,0">
+            <TextBlock Grid.Column="0" HorizontalAlignment="Left" Margin="20,0,0,0" TextWrapping="Wrap" Text="Zone Radio" VerticalAlignment="Center" Foreground="White" FontSize="24" FontWeight="Bold"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                <Ellipse x:Name="StatusIcon" Height="20" Width="20" Fill="#a3a3a3" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock x:Name="StatusText" Text="Not Connected" FontSize="16" Margin="0,0,0,0" FontWeight="Bold" Foreground="White"/>
+            </StackPanel>
+        </Grid>
+        <Grid Margin="0,80,0,0">
+            <TextBlock Text="Set Keybinds" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,10,0,0" FontWeight="Bold" FontSize="20"/>
+            <Grid Margin="20,40,20,40">
+                <StackPanel Grid.Row="0" Orientation="Vertical">
+                    <local:KeybindCard VerticalAlignment="Top" Title="Toggle PDA" Description="The keybind you use to toggle your PDA. Zone Radio cannot be turned off when the PDA is off."/>
+                    <local:KeybindCard VerticalAlignment="Top" Title="Toggle Playback" Description="The keybind you use to toggle Spotify playback. PDA must be open."/>
+                    <local:KeybindCard VerticalAlignment="Top" Title="Skip Song" Description="The keybind you use to skip a song. PDA must be open."/>
+                </StackPanel>
+                <StackPanel VerticalAlignment="Bottom">
+                    <Button x:Name="ConnectButton" Background="#2563eb" Foreground="White" FontWeight="Bold" FontSize="20" Content="Connect" Cursor="Hand" BorderBrush="{x:Null}"/>
+                    <TextBlock x:Name="ConnectDetails" Height="100" Margin="0,10,0,0" Text="Connection status information will be displayed here." Grid.Row="1" Background="#d4d4d4"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

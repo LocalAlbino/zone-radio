@@ -20,5 +20,17 @@ namespace ZoneRadio
         {
             InitializeComponent();
         }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Implement cleanup logic for keyboard listener and http client
+            // once they're implemented.
+            Close();
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
     }
 }
