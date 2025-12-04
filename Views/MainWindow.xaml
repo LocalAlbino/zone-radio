@@ -38,8 +38,7 @@
                     <local:KeybindCard VerticalAlignment="Top" Title="Skip Song" Description="The keybind you use to skip a song. PDA must be open."/>
                 </StackPanel>
                 <StackPanel VerticalAlignment="Bottom">
-                    <Button x:Name="ConnectButton" Background="#2563eb" Foreground="White" FontWeight="Bold" FontSize="20" Content="Connect" Cursor="Hand" BorderBrush="{x:Null}"/>
-                    <TextBlock x:Name="ConnectDetails" Height="100" Margin="0,10,0,0" Text="Connection status information will be displayed here." Grid.Row="1" Background="#d4d4d4"/>
+                    <Button x:Name="ConnectButton" Background="#2563eb" Foreground="White" FontWeight="Bold" FontSize="20" Content="Connect" Cursor="Hand" BorderBrush="{x:Null}" Click="ConnectButton_Click"/>
                 </StackPanel>
             </Grid>
         </Grid>
