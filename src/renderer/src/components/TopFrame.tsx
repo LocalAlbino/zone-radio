@@ -9,18 +9,21 @@ export default function TopFrame(): React.JSX.Element {
       <button
         aria-label="Close"
         className="frame-button py-1 px-2 text-blue-500 bg-blue-800 hover:text-white hover:bg-red-500"
+        onClick={() => window.api.onCloseButtonClick()}
       >
         <CloseIcon />
       </button>
       <button
         aria-label="Maximize"
         className="frame-button py-1 px-2 text-blue-500 hover:text-white bg-blue-800 hover:bg-blue-700"
+        onClick={() => window.api.onMaximizeButtonClick()}
       >
         <MaximizeIcon />
       </button>
       <button
         aria-label="Minimize"
         className="frame-button py-1 px-2 text-blue-500 hover:text-white bg-blue-800 hover:bg-blue-700"
+        onClick={() => window.api.onMinimizeButtonClick()}
       >
         <MinimizeIcon />
       </button>
