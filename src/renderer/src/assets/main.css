@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+.frame {
+  -webkit-app-region: drag;
+}
+
+.frame-button {
+  -webkit-user-drag: none;
+  -webkit-app-region: no-drag;
+}
