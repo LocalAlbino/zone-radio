@@ -5,9 +5,11 @@ import { electronAPI } from "@electron-toolkit/preload";
 const api = {
   onCloseButtonClick: () => ipcRenderer.send("window-close"),
   onMinimizeButtonClick: () => ipcRenderer.send("window-minimize"),
-  onMaximizeButtonClick: () => ipcRenderer.send("window-maximize")
+  onMaximizeButtonClick: () => ipcRenderer.send("window-maximize"),
+  getSpotifyAuthCode: async () => ipcRenderer.invoke("spotify-authorize")
 } as const;
 
+// Used in index.d.ts
 export type API = typeof api;
 
 // Use `contextBridge` APIs to expose Electron APIs to

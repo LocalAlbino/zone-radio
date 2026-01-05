@@ -1,6 +1,6 @@
 import React from "react";
 import clsx from "clsx";
-import { ApiConnectionStatus } from "@renderer/types";
+import { ApiConnectionStatus } from "@/types";
 
 type InfoPanelProps = {
   connectionStatus: ApiConnectionStatus;

@@ -2,6 +2,8 @@ import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
+import { getAccessToken, getAuthorizationCode } from "@api/auth";
+import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
 
 function createWindow(): void {
   // Create the browser window.
@@ -41,6 +43,20 @@ function createWindow(): void {
   ipcMain.on("window-maximize", () =>
     mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize()
   );
+
+  // Spotify API implementation
+  ipcMain.handle("spotify-authorize", async (): Promise<ApiConnectionStatus> => {
+    try {
+      const [code, codeVerifier] = await getAuthorizationCode();
+      // NOTE: access token will be used for api calls later, just here for initial implementation
+      const accessToken: SpotifyAccessToken = await getAccessToken(code, codeVerifier);
+      console.log("accessToken", accessToken);
+    } catch (error) {
+      console.error(error);
+      return "Connection Failed";
+    }
+    return "Connected";
+  });
 }
 
 // This method will be called when Electron has finished
@@ -56,9 +72,6 @@ app.whenReady().then(() => {
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
-
-  // IPC test
-  ipcMain.on("ping", () => console.log("pong"));
 
   createWindow();
 

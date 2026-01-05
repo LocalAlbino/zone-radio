@@ -1,7 +1,7 @@
 import React from "react";
-import CloseIcon from "../assets/close-con.svg?react";
-import MaximizeIcon from "../assets/maximize-icon.svg?react";
-import MinimizeIcon from "../assets/minimize-icon.svg?react";
+import CloseIcon from "@renderer/assets/close-con.svg?react";
+import MaximizeIcon from "@renderer/assets/maximize-icon.svg?react";
+import MinimizeIcon from "@renderer/assets/minimize-icon.svg?react";
 
 export default function TopFrame(): React.JSX.Element {
   return (

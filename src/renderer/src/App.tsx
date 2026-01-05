@@ -1,13 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import InfoPanel from "@renderer/components/InfoPanel";
 import TopFrame from "@renderer/components/TopFrame";
 import KeybindOption from "@renderer/components/KeybindOption";
-import InfoIcon from "./assets/info-icon.svg?react";
-import { ApiConnectionStatus } from "@renderer/types";
+import InfoIcon from "@renderer/assets/info-icon.svg?react";
+import { ApiConnectionStatus } from "@/types";
+import clsx from "clsx";
 
 export default function App(): React.JSX.Element {
-  // NOTE: placeholder for initial ui implementation
-  const connectionStatus: ApiConnectionStatus = "Not Connected";
+  const [connectionStatus, setConnectionStatus] = useState<ApiConnectionStatus>("Not Connected");
+
+  async function handleClick(): Promise<void> {
+    if (connectionStatus === "Connected" || connectionStatus === "Connecting") return;
+
+    setConnectionStatus("Connecting");
+
+    const result: ApiConnectionStatus = await window.api.getSpotifyAuthCode();
+    setConnectionStatus(result);
+  }
 
   return (
     <div className="flex flex-col inset-0 fixed bg-gray-950">
@@ -35,7 +44,17 @@ export default function App(): React.JSX.Element {
             Zone Radio will open a browser window to connect to your Spotify. In order for Zone
             Radio to work, you&#39;ll need a Spotify Premium subscription for your account.
           </span>
-          <button className="bg-blue-800 hover:bg-blue-700 font-bold text-white text-lg rounded-md p-2">
+          <button
+            disabled={connectionStatus === "Connected" || connectionStatus === "Connecting"}
+            className={clsx(
+              (connectionStatus === "Not Connected" || connectionStatus === "Connection Failed") &&
+                "bg-blue-800 hover:bg-blue-700",
+              (connectionStatus === "Connected" || connectionStatus === "Connecting") &&
+                "bg-gray-800 hover:bg-gray-800",
+              "font-bold text-white text-lg rounded-md p-2"
+            )}
+            onClick={handleClick}
+          >
             Connect
           </button>
         </div>

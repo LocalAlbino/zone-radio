@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  background-color: black;
+}
+
 .frame {
   -webkit-app-region: drag;
 }
