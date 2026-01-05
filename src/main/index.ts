@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { getAccessToken, getAuthorizationCode } from "@api/auth";
+import { getAccessToken, getAuthorizationCode, getRefreshToken } from "@api/auth";
 import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
 
 function createWindow(): void {
@@ -46,15 +46,23 @@ function createWindow(): void {
 
   // Spotify API implementation
   ipcMain.handle("spotify-authorize", async (): Promise<ApiConnectionStatus> => {
+    // NOTE: access token will be used for api calls later, just here for initial implementation
+    let accessToken: SpotifyAccessToken;
     try {
       const [code, codeVerifier] = await getAuthorizationCode();
-      // NOTE: access token will be used for api calls later, just here for initial implementation
-      const accessToken: SpotifyAccessToken = await getAccessToken(code, codeVerifier);
+      accessToken = await getAccessToken(code, codeVerifier);
       console.log("accessToken", accessToken);
     } catch (error) {
       console.error(error);
       return "Connection Failed";
     }
+    // TODO: We need to be able to stop this if there is ever an error for whatever reason
+    console.log(
+      setInterval(
+        async () => (accessToken = await getRefreshToken(accessToken.refresh_token)),
+        accessToken.expires_in
+      )
+    );
     return "Connected";
   });
 }

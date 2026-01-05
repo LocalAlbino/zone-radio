@@ -49,14 +49,17 @@ async function handleRedirect(port: number): Promise<string> {
   return code as string;
 }
 
+// clientId only needed for auth so it can just go in this file alone
+// Also, this is safe to expose since we use PKCE and localhost for our redirect
+const clientId = "5804ec5101b54d758998e50dbd5c1d38";
+
 export async function getAuthorizationCode(): Promise<string[]> {
   const [codeChallenge, codeVerifier] = await generateCodeChallenge(64);
   const authUrl = new URL("https://accounts.spotify.com/authorize");
 
-  // With PKCE we can expose this safely
   const params = {
     response_type: "code",
-    client_id: "5804ec5101b54d758998e50dbd5c1d38",
+    client_id: clientId,
     scope: "user-read-private user-read-email user-read-playback-state user-modify-playback-state",
     code_challenge_method: "S256",
     code_challenge: codeChallenge,
@@ -76,7 +79,7 @@ export async function getAccessToken(
     grant_type: "authorization_code",
     code: code,
     redirect_uri: "http://127.0.0.1:8888/zone-radio/",
-    client_id: "5804ec5101b54d758998e50dbd5c1d38",
+    client_id: clientId,
     code_verifier: codeVerifier
   };
 
@@ -87,6 +90,26 @@ export async function getAccessToken(
     },
     body: new URLSearchParams(params).toString()
   });
+  const response = await body.json();
+  console.log(response);
+  return SpotifyAccessTokenSchema.parse(response);
+}
+
+export async function getRefreshToken(refreshToken: string): Promise<SpotifyAccessToken> {
+  const params = {
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+    client_id: clientId
+  };
+
+  const body = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(params).toString()
+  });
+
   const response = await body.json();
   console.log(response);
   return SpotifyAccessTokenSchema.parse(response);
