@@ -18,6 +18,9 @@ export default function App(): React.JSX.Element {
     setConnectionStatus(result);
   }
 
+  // Handle disconnect if error occurs in main
+  window.api.spotifyConnectionLost(() => setConnectionStatus("Not Connected"));
+
   return (
     <div className="flex flex-col inset-0 fixed bg-gray-950">
       <div>
@@ -29,14 +32,17 @@ export default function App(): React.JSX.Element {
         <KeybindOption
           name="Toggle PDA"
           description="This is the keybind that you'll use to toggle the PDA."
+          defaultValue="CapsLock"
         />
         <KeybindOption
           name="Toggle Playback"
           description="This is the keybind that you'll use to toggle music playback. The PDA must be open."
+          defaultValue="Z"
         />
         <KeybindOption
           name="Skip Song"
           description="This is the keybind that you'll use to skip the current song. The PDA must be open."
+          defaultValue="C"
         />
         <div className="flex flex-col gap-4 mx-4 my-8">
           <span className="flex flex-row gap-1 text-gray-400 text-md">

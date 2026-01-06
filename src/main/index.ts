@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { getAccessToken, getAuthorizationCode, getRefreshToken } from "@api/auth";
 import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
+import keyCodes from "./keyCodes";
 
 function createWindow(): void {
   // Create the browser window.
@@ -16,7 +17,8 @@ function createWindow(): void {
     ...(process.platform === "linux" ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
-      sandbox: false
+      sandbox: false,
+      devTools: true
     }
   });
 
@@ -44,8 +46,21 @@ function createWindow(): void {
     mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize()
   );
 
+  // KeyCodes for UI
+  ipcMain.handle("keycodes-keys", (): string[] => Object.keys(keyCodes));
+  ipcMain.handle("keycodes-values", (): string[] => Object.values(keyCodes));
+  console.log(Object.keys(keyCodes));
+
   // Spotify API implementation
+  let refreshInterval: NodeJS.Timeout | null = null;
+
   ipcMain.handle("spotify-authorize", async (): Promise<ApiConnectionStatus> => {
+    // Clear any existing interval
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
+    }
+
     // NOTE: access token will be used for api calls later, just here for initial implementation
     let accessToken: SpotifyAccessToken;
     try {
@@ -56,13 +71,21 @@ function createWindow(): void {
       console.error(error);
       return "Connection Failed";
     }
-    // TODO: We need to be able to stop this if there is ever an error for whatever reason
-    console.log(
-      setInterval(
-        async () => (accessToken = await getRefreshToken(accessToken.refresh_token)),
-        accessToken.expires_in
-      )
-    );
+
+    // Create refresh interval with error handling
+    refreshInterval = setInterval(async () => {
+      try {
+        accessToken = await getRefreshToken(accessToken.refresh_token);
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+          refreshInterval = null;
+        }
+        mainWindow.webContents.send("spotify-connection-lost");
+      }
+    }, accessToken.expires_in * 1000); // Convert to milliseconds
+
     return "Connected";
   });
 }

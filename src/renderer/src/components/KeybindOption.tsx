@@ -4,11 +4,13 @@ import KeybindOptionSelect from "@renderer/components/KeybindOptionSelect";
 type KeybindOptionProps = {
   name: string;
   description: string;
+  defaultValue: string;
 };
 
 export default function KeybindOption({
   name,
-  description
+  description,
+  defaultValue
 }: KeybindOptionProps): React.JSX.Element {
   return (
     <div className="text-md flex flex-row justify-between gap-1 p-2 items-center rounded-sm">
@@ -16,7 +18,7 @@ export default function KeybindOption({
         <span className="text-white">{name}</span>
         <span className="text-gray-400">{description}</span>
       </div>
-      <KeybindOptionSelect />
+      <KeybindOptionSelect defaultValue={defaultValue} />
     </div>
   );
 }
