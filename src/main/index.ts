@@ -2,7 +2,7 @@ import { app, BrowserWindow, globalShortcut, ipcMain, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { getAccessToken, getAuthorizationCode, getRefreshToken } from "@api/auth";
+import spotifyApi from "@/api/spotifyApi";
 import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
 import keyCodes from "./keyCodes";
 
@@ -98,8 +98,8 @@ function createWindow(): void {
     // NOTE: access token will be used for api calls later, just here for initial implementation
     let accessToken: SpotifyAccessToken;
     try {
-      const [code, codeVerifier] = await getAuthorizationCode();
-      accessToken = await getAccessToken(code, codeVerifier);
+      const [code, codeVerifier] = await spotifyApi.auth.getAuthorizationCode();
+      accessToken = await spotifyApi.auth.getAccessToken(code, codeVerifier);
       console.log("accessToken", accessToken);
     } catch (error) {
       console.error(error);
@@ -109,7 +109,7 @@ function createWindow(): void {
     // Create refresh interval with error handling
     refreshInterval = setInterval(async () => {
       try {
-        accessToken = await getRefreshToken(accessToken.refresh_token);
+        accessToken = await spotifyApi.auth.getRefreshToken(accessToken.refresh_token);
       } catch (error) {
         console.error("Token refresh failed:", error);
         if (refreshInterval) {
