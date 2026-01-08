@@ -3,12 +3,24 @@ import { electronAPI } from "@electron-toolkit/preload";
 
 // Custom APIs for renderer
 const api = {
+  // Top frame
   onCloseButtonClick: () => ipcRenderer.send("window-close"),
   onMinimizeButtonClick: () => ipcRenderer.send("window-minimize"),
   onMaximizeButtonClick: () => ipcRenderer.send("window-maximize"),
+
+  // Spotify API
   getSpotifyAuthCode: async () => ipcRenderer.invoke("spotify-authorize"),
   spotifyConnectionLost: (callback: () => void) =>
-    ipcRenderer.on("spotify-connection-lost", () => callback())
+    ipcRenderer.on("spotify-connection-lost", () => callback()),
+
+  // Keybinds
+  updateTogglePdaKeybind: (key: string) => ipcRenderer.send("keybind-pda", key),
+  updateTogglePlaybackKeybind: (key: string) => ipcRenderer.send("keybind-playback", key),
+  updateSkipSongKeybind: (key: string) => ipcRenderer.send("keybind-skip", key),
+
+  // UI for PDA status
+  updatePdaStatus: (callback: (status: boolean) => void) =>
+    ipcRenderer.on("update-pda", (_, status: boolean) => callback(status))
 } as const;
 
 const keyCodes = {

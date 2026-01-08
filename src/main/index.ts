@@ -1,10 +1,16 @@
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { getAccessToken, getAuthorizationCode, getRefreshToken } from "@api/auth";
 import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
 import keyCodes from "./keyCodes";
+
+const keybinds = {
+  pdaKeybind: "CapsLock",
+  playbackKeybind: "Z",
+  skipKeybind: "C"
+};
 
 function createWindow(): void {
   // Create the browser window.
@@ -18,7 +24,7 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
-      devTools: true
+      devTools: true // TODO: Remove devTools for production
     }
   });
 
@@ -49,10 +55,38 @@ function createWindow(): void {
   // KeyCodes for UI
   ipcMain.handle("keycodes-keys", (): string[] => Object.keys(keyCodes));
   ipcMain.handle("keycodes-values", (): string[] => Object.values(keyCodes));
-  console.log(Object.keys(keyCodes));
+
+  // Handle keybind updates from UI
+  ipcMain.on("keybind-pda", (_, key: string) => {
+    if (globalShortcut.isRegistered(keybinds.pdaKeybind))
+      globalShortcut.unregister(keybinds.pdaKeybind);
+
+    keybinds.pdaKeybind = key;
+    globalShortcut.register(keybinds.pdaKeybind, () => console.log("PDA keybind pressed."));
+  });
+  ipcMain.on("keybind-skip", (_, key: string) => {
+    if (globalShortcut.isRegistered(keybinds.skipKeybind))
+      globalShortcut.unregister(keybinds.skipKeybind);
+
+    keybinds.skipKeybind = key;
+    globalShortcut.register(keybinds.skipKeybind, () => console.log("Skip keybind pressed."));
+  });
+  ipcMain.on("keybind-playback", (_, key: string) => {
+    if (globalShortcut.isRegistered(keybinds.playbackKeybind))
+      globalShortcut.unregister(keybinds.playbackKeybind);
+
+    keybinds.playbackKeybind = key;
+    globalShortcut.register(keybinds.playbackKeybind, () =>
+      console.log("Playback keybind pressed.")
+    );
+  });
+
+  // PDA status
+  let pdaStatus: boolean = false;
 
   // Spotify API implementation
   let refreshInterval: NodeJS.Timeout | null = null;
+  let accessToken: SpotifyAccessToken | null = null;
 
   ipcMain.handle("spotify-authorize", async (): Promise<ApiConnectionStatus> => {
     // Clear any existing interval
@@ -97,6 +131,11 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
 
+  // Set initial keybinds
+  globalShortcut.register(keybinds.pdaKeybind, () => console.log("PDA keybind pressed."));
+  globalShortcut.register(keybinds.skipKeybind, () => console.log("Skip keybind pressed."));
+  globalShortcut.register(keybinds.playbackKeybind, () => console.log("Playback keybind pressed."));
+
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -117,6 +156,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
+  globalShortcut.unregisterAll();
   if (process.platform !== "darwin") {
     app.quit();
   }
