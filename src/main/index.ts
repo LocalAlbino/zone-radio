@@ -4,12 +4,12 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import spotifyApi from "@/api/spotifyApi";
 import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
-import keyCodes from "./keyCodes";
+import { uIOhook, UiohookKey } from "uiohook-napi";
 
 const keybinds = {
-  pdaKeybind: "CapsLock",
-  playbackKeybind: "Z",
-  skipKeybind: "C"
+  togglePdaKeybind: "CapsLock",
+  togglePlaybackKeybind: "Z",
+  toggleSkipKeybind: "C"
 };
 
 function createWindow(): void {
@@ -53,32 +53,20 @@ function createWindow(): void {
   );
 
   // KeyCodes for UI
-  ipcMain.handle("keycodes-keys", (): string[] => Object.keys(keyCodes));
-  ipcMain.handle("keycodes-values", (): string[] => Object.values(keyCodes));
+  ipcMain.handle("keycodes-keys", (): string[] => Object.keys(UiohookKey));
 
   // Handle keybind updates from UI
   ipcMain.on("keybind-pda", (_, key: string) => {
-    if (globalShortcut.isRegistered(keybinds.pdaKeybind))
-      globalShortcut.unregister(keybinds.pdaKeybind);
-
-    keybinds.pdaKeybind = key;
-    globalShortcut.register(keybinds.pdaKeybind, () => console.log("PDA keybind pressed."));
+    keybinds.togglePdaKeybind = key;
+    console.log("PDA keybind updated.");
   });
   ipcMain.on("keybind-skip", (_, key: string) => {
-    if (globalShortcut.isRegistered(keybinds.skipKeybind))
-      globalShortcut.unregister(keybinds.skipKeybind);
-
-    keybinds.skipKeybind = key;
-    globalShortcut.register(keybinds.skipKeybind, () => console.log("Skip keybind pressed."));
+    keybinds.toggleSkipKeybind = key;
+    console.log("Skip keybind updated.");
   });
   ipcMain.on("keybind-playback", (_, key: string) => {
-    if (globalShortcut.isRegistered(keybinds.playbackKeybind))
-      globalShortcut.unregister(keybinds.playbackKeybind);
-
-    keybinds.playbackKeybind = key;
-    globalShortcut.register(keybinds.playbackKeybind, () =>
-      console.log("Playback keybind pressed.")
-    );
+    keybinds.togglePlaybackKeybind = key;
+    console.log("Playback keybind updated.");
   });
 
   // PDA status
@@ -131,17 +119,24 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
 
-  // Set initial keybinds
-  globalShortcut.register(keybinds.pdaKeybind, () => console.log("PDA keybind pressed."));
-  globalShortcut.register(keybinds.skipKeybind, () => console.log("Skip keybind pressed."));
-  globalShortcut.register(keybinds.playbackKeybind, () => console.log("Playback keybind pressed."));
-
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
+
+  // Initialize keybind listener
+  uIOhook.on("keydown", (e) => {
+    if (e.keycode === UiohookKey[keybinds.togglePdaKeybind]) {
+      console.log("PDA keybind pressed.");
+    } else if (e.keycode === UiohookKey[keybinds.togglePlaybackKeybind]) {
+      console.log("Playback keybind pressed.");
+    } else if (e.keycode === UiohookKey[keybinds.toggleSkipKeybind]) {
+      console.log("Skip keybind pressed.");
+    }
+  });
+  uIOhook.start();
 
   createWindow();
 

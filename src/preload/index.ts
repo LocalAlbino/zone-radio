@@ -24,11 +24,10 @@ const api = {
 } as const;
 
 const keyCodes = {
-  keys: async () => ipcRenderer.invoke("keycodes-keys"),
-  values: async () => ipcRenderer.invoke("keycodes-values")
+  keys: async () => ipcRenderer.invoke("keycodes-keys")
 } as const;
 
-// Used in index.d.ts for tsc
+// Used in index.d.ts for lsp
 export type API = typeof api;
 export type KeyCodes = typeof keyCodes;
 
