@@ -3,23 +3,30 @@ import React, { useEffect, useState } from "react";
 type KeybindOptionSelectProps = {
   defaultValue: string;
   callback: (key: string) => void;
+  selectId: number; // Used to index window.localStorage["keybinds"]
+  userValues: string[];
+  updateUserValues: (idx: number, key: string) => void;
 };
 
 export default function KeybindOptionSelect({
   defaultValue,
-  callback
+  callback,
+  selectId,
+  userValues,
+  updateUserValues
 }: KeybindOptionSelectProps): React.JSX.Element {
   const [value, setValue] = useState<string>(defaultValue);
+  const [options, setOptions] = useState<string[]>([]);
+
   useEffect(() => {
     const fetchKeys = async (): Promise<void> => {
       const keys = await window.keyCodes.keys();
       setOptions(keys);
-      setValue(defaultValue);
+      setValue(userValues[selectId] ?? defaultValue);
     };
     fetchKeys();
   }, []);
 
-  const [options, setOptions] = useState<string[]>([]);
   const optionsList = options.map((option: string) => (
     <option key={option} value={option}>
       {option}
@@ -33,7 +40,8 @@ export default function KeybindOptionSelect({
       value={value}
       onChange={(e) => {
         setValue(e.target.value);
-        callback(value);
+        updateUserValues(selectId, e.target.value);
+        callback(e.target.value);
       }}
     >
       {optionsList}
