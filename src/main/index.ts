@@ -3,13 +3,18 @@ import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import spotifyApi from "@/api/spotifyApi";
-import { ApiConnectionStatus, SpotifyAccessToken } from "@/types";
+import { ApiConnectionStatus } from "@/types";
 import { uIOhook, UiohookKey } from "uiohook-napi";
 
 const keybinds = {
   togglePdaKeybind: "CapsLock",
   togglePlaybackKeybind: "Z",
   toggleSkipKeybind: "C"
+};
+
+const pda = {
+  status: false,
+  updateCallback: (status: boolean): void => console.log(status)
 };
 
 function createWindow(): void {
@@ -23,10 +28,13 @@ function createWindow(): void {
     ...(process.platform === "linux" ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
-      sandbox: false,
-      devTools: true // TODO: Remove devTools for production
+      sandbox: false
     }
   });
+
+  pda.updateCallback = (status: boolean) => {
+    mainWindow.webContents.send("update-pda", status);
+  };
 
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
@@ -69,13 +77,8 @@ function createWindow(): void {
     console.log("Playback keybind updated.");
   });
 
-  // PDA status
-  let pdaStatus: boolean = false;
-
   // Spotify API implementation
   let refreshInterval: NodeJS.Timeout | null = null;
-  let accessToken: SpotifyAccessToken | null = null;
-
   ipcMain.handle("spotify-authorize", async (): Promise<ApiConnectionStatus> => {
     // Clear any existing interval
     if (refreshInterval) {
@@ -83,12 +86,15 @@ function createWindow(): void {
       refreshInterval = null;
     }
 
-    // NOTE: access token will be used for api calls later, just here for initial implementation
-    let accessToken: SpotifyAccessToken;
     try {
       const [code, codeVerifier] = await spotifyApi.auth.getAuthorizationCode();
-      accessToken = await spotifyApi.auth.getAccessToken(code, codeVerifier);
-      console.log("accessToken", accessToken);
+
+      // Initialize playback
+      spotifyApi.playback.accessToken = await spotifyApi.auth.getAccessToken(code, codeVerifier);
+      spotifyApi.token = spotifyApi.playback.accessToken.access_token;
+      console.log(spotifyApi.token);
+      await spotifyApi.playback.getIsPremium(spotifyApi.token);
+      await spotifyApi.playback.getIsPlaying(spotifyApi.token);
     } catch (error) {
       console.error(error);
       return "Connection Failed";
@@ -97,7 +103,10 @@ function createWindow(): void {
     // Create refresh interval with error handling
     refreshInterval = setInterval(async () => {
       try {
-        accessToken = await spotifyApi.auth.getRefreshToken(accessToken.refresh_token);
+        spotifyApi.playback.accessToken = await spotifyApi.auth.getRefreshToken(
+          spotifyApi.playback.accessToken.refresh_token
+        );
+        spotifyApi.token = spotifyApi.playback.accessToken.access_token;
       } catch (error) {
         console.error("Token refresh failed:", error);
         if (refreshInterval) {
@@ -106,7 +115,7 @@ function createWindow(): void {
         }
         mainWindow.webContents.send("spotify-connection-lost");
       }
-    }, accessToken.expires_in * 1000); // Convert to milliseconds
+    }, spotifyApi.playback.accessToken.expires_in * 1000); // Convert to milliseconds
 
     return "Connected";
   });
@@ -130,9 +139,13 @@ app.whenReady().then(() => {
   uIOhook.on("keydown", (e) => {
     if (e.keycode === UiohookKey[keybinds.togglePdaKeybind]) {
       console.log("PDA keybind pressed.");
+      pda.status = !pda.status;
+      pda.updateCallback(pda.status);
     } else if (e.keycode === UiohookKey[keybinds.togglePlaybackKeybind]) {
+      if (pda.status) spotifyApi.playback.togglePlayback(spotifyApi.token);
       console.log("Playback keybind pressed.");
     } else if (e.keycode === UiohookKey[keybinds.toggleSkipKeybind]) {
+      if (pda.status) spotifyApi.playback.skipSong(spotifyApi.token);
       console.log("Skip keybind pressed.");
     }
   });

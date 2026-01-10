@@ -9,32 +9,32 @@ const auth = {
   redirectUri: "http://127.0.0.1:8888/zone-radio/",
   scope: "user-read-private user-read-email user-read-playback-state user-modify-playback-state",
 
-  generateRandomString(length: number): string {
+  generateRandomString: (length: number): string => {
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const values = crypto.getRandomValues(new Uint8Array(length));
     return values.reduce((acc, x) => acc + possible[x % possible.length], "");
   },
 
-  async sha256(plain: string): Promise<ArrayBuffer> {
+  sha256: async (plain: string): Promise<ArrayBuffer> => {
     const encoder = new TextEncoder();
     const data = encoder.encode(plain);
     return crypto.subtle.digest("SHA-256", data);
   },
 
-  base64encode(input: ArrayBuffer): string {
+  base64encode: (input: ArrayBuffer): string => {
     return btoa(String.fromCharCode(...new Uint8Array(input)))
       .replace(/=/g, "")
       .replace(/\+/g, "-")
       .replace(/\//g, "_");
   },
 
-  async generateCodeChallenge(length: number): Promise<string[]> {
-    const codeVerifier = this.generateRandomString(length);
-    const hashed: ArrayBuffer = await this.sha256(codeVerifier);
-    return [this.base64encode(hashed), codeVerifier];
+  generateCodeChallenge: async (length: number): Promise<string[]> => {
+    const codeVerifier = auth.generateRandomString(length);
+    const hashed: ArrayBuffer = await auth.sha256(codeVerifier);
+    return [auth.base64encode(hashed), codeVerifier];
   },
 
-  async handleRedirect(port: number): Promise<string> {
+  handleRedirect: async (port: number): Promise<string> => {
     const app = express();
     const redirected = new Promise((resolve) => {
       app.get("/zone-radio", (req: Request, res: Response) => {
@@ -56,30 +56,30 @@ const auth = {
     return code as string;
   },
 
-  async getAuthorizationCode(): Promise<string[]> {
-    const [codeChallenge, codeVerifier] = await this.generateCodeChallenge(64);
+  getAuthorizationCode: async (): Promise<string[]> => {
+    const [codeChallenge, codeVerifier] = await auth.generateCodeChallenge(64);
     const authUrl = new URL("https://accounts.spotify.com/authorize");
 
     const params = {
       response_type: "code",
-      client_id: this.clientId,
-      scope: this.scope,
+      client_id: auth.clientId,
+      scope: auth.scope,
       code_challenge_method: "S256",
       code_challenge: codeChallenge,
-      redirect_uri: this.redirectUri
+      redirect_uri: auth.redirectUri
     };
 
     authUrl.search = new URLSearchParams(params).toString();
     await open(authUrl.toString());
-    return [await this.handleRedirect(8888), codeVerifier];
+    return [await auth.handleRedirect(8888), codeVerifier];
   },
 
   async getAccessToken(code: string, codeVerifier: string): Promise<SpotifyAccessToken> {
     const params = {
       grant_type: "authorization_code",
       code: code,
-      redirect_uri: this.redirectUri,
-      client_id: this.clientId,
+      redirect_uri: auth.redirectUri,
+      client_id: auth.clientId,
       code_verifier: codeVerifier
     };
 
@@ -99,7 +99,7 @@ const auth = {
     const params = {
       grant_type: "refresh_token",
       refresh_token: refreshToken,
-      client_id: this.clientId
+      client_id: auth.clientId
     };
 
     const body = await fetch("https://accounts.spotify.com/api/token", {
@@ -114,6 +114,6 @@ const auth = {
     console.log(response);
     return SpotifyAccessTokenSchema.parse(response);
   }
-};
+} as const;
 
 export default auth;
