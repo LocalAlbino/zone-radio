@@ -1,14 +1,11 @@
-import React from "react";
-import { Button } from "@/components/button";
 import "./App.css";
+import TitleBar from "./components/TitleBar";
 
 function App(): React.JSX.Element {
   return (
     <>
-      <main className="m-8">
-        <h1>Zone Radio</h1>
-        <Button variant="default">Click me!</Button>
-      </main>
+      <TitleBar />
+      <main className="m-8"></main>
     </>
   );
 }
